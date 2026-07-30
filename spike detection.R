@@ -2,7 +2,38 @@ library(data.table)
 
 # Read file
 
-file_path <- "C:/Users/tahoang/Downloads/2024-05-06T13-24-54McsRecording_2_E-00190_Recording-0_(Data Acquisition (1);MEA2100-Mini; Electrode Raw Data1)_Analog.csv"
+file_path <- "C:/Users/tahoang/Downloads/2024-05-07T11-53-47McsRecording_E-00190_Recording-0_(Data Acquisition (1);MEA2100-Mini; Electrode Raw Data1)_Analog.csv"
+
+df <- fread(file_path, skip = 6)
+
+
+# Time and signals,
+
+time <- df[[1]] / 1e6
+
+signals <- df[, -1, with = FALSE]
+
+electrodes <- names(signals)
+
+cat("Number of electrodes:",
+    length(electrodes),
+    "\n")
+
+
+recording_time <- max(time)
+
+cat("Recording duration:",
+    recording_time,
+    "seconds\n")
+
+
+# Choose electrode
+
+library(data.table)
+
+# Read file
+
+file_path <- "C:/Users/tahoang/Downloads/2024-05-07T11-53-47McsRecording_E-00190_Recording-0_(Data Acquisition (1);MEA2100-Mini; Electrode Raw Data1)_Analog.csv"
 
 df <- fread(file_path, skip = 6)
 
@@ -98,6 +129,16 @@ detect_spikes <- function(signal, threshold_factor){
   return(spike_idx)
 }
 
+spike_counts <- sapply(signals, function(x)
+  length(detect_spikes(x, 4))
+)
+
+best_electrode <- names(which.max(spike_counts))
+
+cat("Best electrode:", best_electrode, "\n")
+
+electrode <- best_electrode
+signal <- signals[[electrode]]
 
 # Compare threshold 4 and 4.5
 
@@ -265,4 +306,5 @@ legend(
   pch=c(NA,NA,NA,16),
   bty="n"
 )
+
 
