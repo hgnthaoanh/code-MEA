@@ -1,5 +1,3 @@
-
-
 library(data.table)
 
 # Load data
@@ -105,67 +103,65 @@ starts <- seq(0, recording_time, by = window_size)
 n_windows <- length(starts)
 
 #== heatmap circle
+#======================
+# Heatmap of firing rate
+#======================
 
 library(ggplot2)
 
 # Firing rate (Hz)
+recording_time <- max(time)
 
-recording_time <- max(time) #heatmap est pour temps total (pas 1 minute)
-
-firing_rate <- sapply(
-  all_spikes,
-  length
-) / recording_time
+firing_rate <- sapply(all_spikes, length) / recording_time
 
 heatmap_data <- data.frame(
   electrode = electrode_labels,
   firing_rate = firing_rate
 )
-# Visual layout (10 x 6)
 
-heatmap_data$x <- rep(1:10, each = 6)
-heatmap_data$y <- rep(6:1, times = 10)
+# ----- Layout -----
 
-# Text colour
+n_col <- 10
+n_row <- ceiling(n_channels / n_col)
 
-mid <- median(heatmap_data$firing_rate)
+heatmap_data$x <- rep(1:n_col, each = n_row)[1:n_channels]
+heatmap_data$y <- rep(n_row:1, times = n_col)[1:n_channels]
 
-heatmap_data$text_colour <-
-  ifelse(
-    heatmap_data$firing_rate > mid,
-    "white",
-    "black"
-  )
+# ----- Text colour -----
 
-# Create plot
+mid <- median(heatmap_data$firing_rate, na.rm = TRUE)
+
+heatmap_data$text_colour <- ifelse(
+  heatmap_data$firing_rate > mid,
+  "white",
+  "black"
+)
+
+# ----- Plot -----
 
 p <- ggplot(
   heatmap_data,
-  aes(
-    x = x,
-    y = y
-  )
+  aes(x = x, y = y)
 ) +
   
-  geom_point( #create circle with shape, size and color line, this is function of R
+  geom_point(
     aes(fill = firing_rate),
     shape = 21,
-    size = 17,
+    size = 16,
     colour = "black",
     stroke = 0.8
   ) +
   
-  geom_text( #function to write the name of electrode
+  geom_text(
     aes(
       label = electrode,
       colour = text_colour
     ),
-    fontface = "bold",
-    size = 3
+    size = 3,
+    fontface = "bold"
   ) +
   
   scale_fill_gradientn(
-    
     colours = c(
       "#313695",
       "#74add1",
@@ -173,101 +169,59 @@ p <- ggplot(
       "#f46d43",
       "#a50026"
     ),
-    
     name = "Firing rate (Hz)"
-    
   ) +
   
   scale_colour_identity() +
   
   coord_equal(
-    xlim = c(0.4, 10.6),
-    ylim = c(0.2, 6.8),
+    xlim = c(0.2, 10.8),
+    ylim = c(0.0, 7.0),
     clip = "off"
   ) +
   
   labs(
-    
     title = "MEA Electrode Activity Heatmap",
-    
     subtitle = paste(
-      "Threshold =",
-      threshold_factor,
-      "× MAD"
+      "Threshold =", threshold_factor, "× MAD"
     ),
-    
-    x = "",
-    y = ""
-    
+    x = NULL,
+    y = NULL
   ) +
   
   theme_minimal(base_size = 14) +
   
   theme(
-    
     panel.grid = element_blank(),
-    
     axis.text = element_blank(),
-    
     axis.ticks = element_blank(),
-    
     plot.title = element_text(
       hjust = 0.5,
       face = "bold",
       size = 18
     ),
-    
     plot.subtitle = element_text(
-      hjust = 0.5,
-      size = 12
-    ),
-    
-    legend.position = "right",
-    
-    plot.margin = margin(
-      20,
-      20,
-      20,
-      20
+      hjust = 0.5
     )
-    
   )
-
-# Show plot
 
 print(p)
 
-
-# Save PDF
-
+# Save heatmap
 ggsave(
-  filename = "MEA_FiringRate_Heatmap.pdf",
+  "MEA_Heatmap.png",
   plot = p,
-  width = 11,
-  height = 7
+  width = 8,
+  height = 6,
+  dpi = 600
 )
-
-browseURL("MEA_FiringRate_Heatmap.pdf")
 
 # Continuous raster plot
-my_colors <- c(
-  "black",
-  "blue",
-  "red",
-  "green3",
-  "purple",
-  "orange",
-  "brown",
-  "cyan",
-  "magenta"
-)
-
-
-
-pdf(
-  "MEA7_Raster_Continuous.pdf",
-  width = 16,
-  height = 12
+png(
+  filename = "MEA4_Raster_Continuous.png",
+  width = 4800,
+  height = 3600,
+  res = 600
 )
 
 
@@ -312,32 +266,19 @@ for(i in seq_len(n_channels)){
   
   spikes <- all_spikes[[i]]
   
-  if(length(spikes) > 0){
+  if(length(spikes)>0){
     
-    # determinier chaque spike de quelle window 60s
-   
-      
-      interval <- floor(spikes / 60)
-      
-      for(j in unique(interval)){
-        
-        idx <- which(interval == j)
-        
-        col_now <- my_colors[(j %% length(my_colors)) + 1]
-        
-        segments(
-          x0 = spikes[idx],
-          y0 = i - 0.35,
-          x1 = spikes[idx],
-          y1 = i + 0.35,
-          col = col_now,
-          lwd = 0.5
-        )
-      }
-    }
+    segments(
+      x0=spikes,
+      y0=i-0.35,
+      x1=spikes,
+      y1=i+0.35,
+      lwd=0.5
+    )
     
   }
   
+}
 
 
 box()
@@ -345,4 +286,6 @@ box()
 dev.off()
 
 
-browseURL("MEA7_Raster_Continuous.pdf")
+browseURL("MEA4_Raster_Continuous.png")
+
+
