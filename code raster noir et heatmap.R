@@ -25,7 +25,7 @@ electrode_labels <- paste0("ID=", 0:(n_channels-1))
 
 # Parameters
 
-sampling_rate <- 20000
+sampling_rate <- 10000
 
 threshold_factor <- 4
 
