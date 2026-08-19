@@ -72,7 +72,7 @@ signal <- signals[[electrode]]
 
 # Parameters
 
-sampling_rate <- 20000
+sampling_rate <- 10000
 
 refractory_ms <- 1
 
